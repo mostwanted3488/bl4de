@@ -37,7 +37,7 @@ public:
     std::atomic<double> bpm { 140.0 }, ppq { 0.0 };
     std::atomic<bool>   playing { false };
     std::atomic<float>  level { 0.0f };
-    std::atomic<int>    kicks { 0 }, snares { 0 }, hats { 0 };
+    std::atomic<int>    kicks { 0 }, snares { 0 }, hats { 0 }, accents { 0 };
 
 private:
     void analyseHop();
@@ -49,8 +49,8 @@ private:
     double accL = 0, accM = 0, accH = 0, accA = 0;
     float prevL = 0, prevM = 0, prevH = 0;
     float peakL = 1e-4f, peakM = 1e-4f, peakH = 1e-4f;
-    float meanOn = 0, meanH = 0;
-    double sinceOn = 1.0, sinceH = 1.0;
+    float meanOn = 0, meanH = 0, meanA = 0;
+    double sinceOn = 1.0, sinceH = 1.0, sinceA = 1.0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Bl4deProcessor)
 };

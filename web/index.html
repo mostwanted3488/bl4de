@@ -444,7 +444,8 @@ function spawnAt(x){const e=new Fig(x,false);e.kind=pick(KINDS);e.state='run';e.
 const DEMO_K=[0,7,10],DEMO_S=[4,12];
 let kickBeats=null,snareBeats=null,kHist=new Float32Array(16),kBar=new Uint8Array(16),curBar=null,plannedK=-99,lastStep=null;
 function srcMode(){if(PLUG&&hostPlay&&musT-hostT<.5)return 'host';if(liveA()&&kickBeats)return 'file';return 'demo';}
-function rebuildBeats(){if(!grid)return;const q=a=>[...new Set(a.map(t=>Math.round((t-grid.off)/grid.BL*4)/4))].sort((x,y)=>x-y);kickBeats=q(grid.kicks);snareBeats=q(grid.snares);}
+let accStr=new Map();
+function rebuildBeats(){if(!grid)return;accStr=new Map();for(const [t,v] of grid.accents){const b=Math.round((t-grid.off)/grid.BL*4)/4;accStr.set(b,Math.max(accStr.get(b)||0,v));}kickBeats=[...accStr.keys()].sort((x,y)=>x-y);}
 function nextKick(p){const m=srcMode();
  if(m==='file'){let lo=0,hi2=kickBeats.length;while(lo<hi2){const md=(lo+hi2)>>1;if(kickBeats[md]<=p+1e-3)lo=md+1;else hi2=md;}return lo<kickBeats.length?kickBeats[lo]:null;}
  const learned=m==='host'&&kHist.some(v=>v>.4),s0=Math.floor(p*4+1e-6)+1;
@@ -452,9 +453,9 @@ function nextKick(p){const m=srcMode();
 function stepTick(){const s=Math.floor(MB*4+1e-6);if(lastStep===null){lastStep=s;return;}if(s<=lastStep)return;lastStep=s;const st=((s%16)+16)%16,bar=Math.floor(s/16);
  if(bar!==curBar){if(curBar!==null)for(let i=0;i<16;i++)kHist[i]=kHist[i]*.5+kBar[i]*.5;kBar.fill(0);curBar=bar;}
  if(srcMode()==='demo'&&DEMO_S.includes(st))snareHit();}
-function kickHit(){drumN++;lastOnsetT=musT;if(srcMode()==='host'){const s=Math.round(MB*4);kBar[((s%16)+16)%16]=1;}
- if(Math.abs(MB-plannedK)>.2)microSlash();}
-function snareHit(){drumN++;lastOnsetT=musT;invT=Math.max(invT,.035);}
+function kickHit(){drumN++;}
+function accentHit(){lastOnsetT=musT;if(srcMode()==='host'){const s=Math.round(MB*4);kBar[((s%16)+16)%16]=1;}if(Math.abs(MB-plannedK)>.2)microSlash();}
+function snareHit(){drumN++;}
 function hatHit(){drumN++;}
 function microSlash(){if(Hr.sw)return;const t=tgt(),s=pick(SWS);if(t&&Math.abs(t.x-Hr.x)<SWL){Hr.dir=t.x>=Hr.x?1:-1;swing(s[0],s[1],.04,.9);cut(t,Hr.dir,true);}else swing(s[0],s[1],.04,.8);}
 function slashHit(t,d,fin,kind){const s=fin?[2.6,-1.6]:pick(SWS);Hr.setPose(fin?'follow':pick(['follow','windup']),99);swing(s[0],s[1],.05,fin?1.45:1.05);
@@ -480,7 +481,7 @@ function* director(op=true){mv0=0;if(op)yield* cOpening();mv0=0;
   if(bar%4===3&&k>=barEnd-1e-3&&now>=barEnd-1&&now<barEnd-.3){yield* fillRoll(barEnd);continue;}
   const kStep=Math.round(k*4),down=((kStep%16)+16)%16===0,kBarN=Math.floor((k+1e-3)/4);
   if(down&&kBarN%8===0&&liveE().length>=3){yield* ultAt(k);continue;}
-  yield* strike(k,down);}}
+  const st=srcMode()==='file'?(accStr.get(k)||0):0;yield* strike(k,down||st>.85);}}
 G=director();
 
 /* ---------- dessin ---------- */
@@ -692,7 +693,10 @@ function analyse(buf){const sr=buf.sampleRate,n=buf.length,c0=buf.getChannelData
   if(P.length<6)break;let sn=0,st=0,snn=0,snt=0;for(const [n,t] of P){sn+=n;st+=t;snn+=n*n;snt+=n*t;}const N=P.length,d=N*snn-sn*sn;if(!d)break;
   const b2=(N*snt-sn*st)/d,a2=(st-b2*sn)/N;if(b2>BLs*.9&&b2<BLs*1.1){BLs=b2;off=a2;}}
  off=((off%BLs)+BLs)%BLs;
- return{BL:BLs,off,kicks,snares,hats};}
+ const AC=new Float32Array(F);for(let i=0;i<F;i++)AC[i]=oL[i]+oM[i]*.8+oH[i]*.35;
+ const ap=peaks(AC,fps,.17,1.4).map(t=>[t,at(AC,t)]),sv=ap.map(a=>a[1]).sort((x,y)=>x-y),thr=sv[Math.floor(sv.length*.45)]||0,mx=sv[Math.floor(sv.length*.95)]||1;
+ const accents=ap.filter(a=>a[1]>=thr).map(a=>[a[0],clamp(a[1]/mx,0,1)]);
+ return{BL:BLs,off,kicks,snares,hats,accents};}
 
 function seek(t){const f=a=>{let lo=0,h2=a.length;while(lo<h2){const m=(lo+h2)>>1;if(a[m]<t)lo=m+1;else h2=m;}return lo;};ki=f(grid.kicks);si=f(grid.snares);hi=f(grid.hats);gIdx=Math.floor((t-grid.off)/grid.BL);}
 const bp=document.getElementById('bp'),bpmIn=document.getElementById('bpmIn');let taps=[];
@@ -737,10 +741,10 @@ function clockTick(rdt){uiT+=rdt;if(PLUG&&hostPlay&&musT-hostT<.5)return;if(uiT>
  else{level=au&&!au.paused?.4:0;}}
 
 /* ---------- hôte (plugin bl4de) ---------- */
-let PLUG=false,hostT=-9,hostPlay=false,hostBeat=null,hostPpq=0,hK=-1,hS=-1,hH=-1,lastOnsetT=-9;
+let hA=-1,PLUG=false,hostT=-9,hostPlay=false,hostBeat=null,hostPpq=0,hK=-1,hS=-1,hH=-1,lastOnsetT=-9;
 function onHost(d){hostT=musT;hostPpq=+d.ppq||0;BL=60/clamp(+d.bpm||140,40,300);level=+d.lvl||0;
  const pl=!!d.playing,start=pl&&!hostPlay;hostPlay=pl;if(start){MB=hostPpq;lastBi=Math.floor(MB+1e-6);lastHalf=Math.floor(MB*2+1e-6);resync(true);}
- if(hK<0){hK=d.k;hS=d.s;hH=d.h;}
+ if(hK<0){hK=d.k;hS=d.s;hH=d.h;hA=d.a|0;}if((d.a|0)!==hA){hA=d.a|0;accentHit();}
  if(d.k!==hK){hK=d.k;kickHit();lastOnsetT=musT;}if(d.s!==hS){hS=d.s;snareHit();lastOnsetT=musT;}if(d.h!==hH){hH=d.h;hatHit();}}
 (function hook(n){const b=window.__JUCE__&&window.__JUCE__.backend;if(b&&b.addEventListener){PLUG=true;document.body.classList.add('plug');b.addEventListener('host',onHost);}else if(n<100)setTimeout(()=>hook(n+1),100);})(0);
 /* ---------- boucle ---------- */

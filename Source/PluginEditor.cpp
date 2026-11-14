@@ -74,5 +74,6 @@ void Bl4deEditor::timerCallback()
     o->setProperty ("k",       proc.kicks.load());
     o->setProperty ("s",       proc.snares.load());
     o->setProperty ("h",       proc.hats.load());
+    o->setProperty ("a",       proc.accents.load());
     web.emitEventIfBrowserIsVisible ("host", juce::var (o));
 }

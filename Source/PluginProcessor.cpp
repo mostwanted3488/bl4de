@@ -72,7 +72,7 @@ void Bl4deProcessor::analyseHop()
     accL = accM = accH = accA = 0; hopCount = 0;
 
     const double dt = hs / sr;
-    sinceOn += dt; sinceH += dt;
+    sinceOn += dt; sinceH += dt; sinceA += dt;
 
     const float fL = juce::jmax (0.0f, eL - prevL), fM = juce::jmax (0.0f, eM - prevM), fH = juce::jmax (0.0f, eH - prevH);
     prevL = eL; prevM = eM; prevH = eH;
@@ -95,6 +95,15 @@ void Bl4deProcessor::analyseHop()
         sinceH = 0;
         hats.fetch_add (1);
     }
+    // accents forts : flux sur toutes les bandes, seuil haut -> les sons les plus marquants
+    const float nA = (nL + nM * 0.8f + nH * 0.35f) / 2.15f;
+    if (nA > meanA * 2.0f + 0.22f && sinceA > 0.17 && eA > 0.004f)
+    {
+        sinceA = 0;
+        accents.fetch_add (1);
+    }
+    meanA += (nA - meanA) * 0.05f;
+
     meanOn += (on - meanOn) * 0.06f;
     meanH  += (nH - meanH) * 0.06f;
 
