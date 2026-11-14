@@ -1,6 +1,6 @@
 # bl4de
 
-Visualizer audio (VST3 / AU, macOS Apple Silicon + Intel) par **@buyorbealoser**.
+Visualizer audio (VST3 / AU pour macOS Apple Silicon + Intel, VST3 pour Windows 10/11) par **@buyorbealoser**.
 Un stickman à l'écharpe rouge tranche des vagues d'ennemis à l'infini, en rythme avec le morceau.
 Le son traverse le plugin sans être modifié.
 
@@ -15,6 +15,14 @@ Le son traverse le plugin sans être modifié.
    xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/bl4de.vst3 ~/Library/Audio/Plug-Ins/Components/bl4de.component
    ```
 4. Dans FL Studio : *Options → Manage plugins → Find installed plugins*, puis ajoute **bl4de** en effet sur le Master (ou sur la piste de batterie).
+
+## Installation (Windows 10 / 11)
+
+1. Télécharge `bl4de-windows.zip` : https://github.com/mostwanted3488/bl4de/releases/download/latest/bl4de-windows.zip — puis dézippe-le.
+2. Copie le dossier `bl4de.vst3` dans `C:\Program Files\Common Files\VST3\`.
+3. Dans FL Studio : *Options → Manage plugins → Find installed plugins*, puis ajoute **bl4de** en effet.
+
+Le visuel utilise WebView2 (déjà présent sur Windows 10 à jour et Windows 11). S'il manque, installe « Microsoft Edge WebView2 Runtime ».
 
 ## Utilisation
 
