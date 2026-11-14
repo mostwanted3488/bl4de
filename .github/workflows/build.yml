@@ -1,0 +1,32 @@
+name: build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+
+      - name: Build VST3 + AU
+        run: cmake --build build --config Release --target bl4de_VST3 bl4de_AU -j 4
+
+      - name: Package
+        run: |
+          mkdir -p out
+          cp -R build/bl4de_artefacts/Release/VST3/bl4de.vst3 out/
+          cp -R build/bl4de_artefacts/Release/AU/bl4de.component out/
+          codesign --force --deep --sign - out/bl4de.vst3
+          codesign --force --deep --sign - out/bl4de.component
+          cp README.md out/
+          cd out && zip -r -y ../bl4de-mac.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bl4de-mac
+          path: bl4de-mac.zip
