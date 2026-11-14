@@ -6,7 +6,7 @@ Le son traverse le plugin sans être modifié.
 
 ## Installation (Mac)
 
-1. Télécharge `bl4de-mac.zip` (onglet **Actions** du repo → dernier build → *Artifacts*) et dézippe-le.
+1. Télécharge `bl4de-mac.zip` : https://github.com/mostwanted3488/bl4de/releases/download/latest/bl4de-mac.zip — puis dézippe-le.
 2. Copie les fichiers :
    - `bl4de.vst3` → `~/Library/Audio/Plug-Ins/VST3/`
    - `bl4de.component` → `~/Library/Audio/Plug-Ins/Components/`
