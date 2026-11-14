@@ -182,9 +182,9 @@ let MB=0,lastBi=null,lastHalf=null;
 function beatPos(){return MB;}
 function srcPos(){if(PLUG&&hostPlay&&musT-hostT<.5)return hostPpq+(musT-hostT)/BL;if(liveA())return (heard()-grid.off)/grid.BL;return null;}
 function resync(op){G=director(op);waitT=0;condF=null;}
-function updMB(rdt){const sp=srcPos();if(sp===null)MB+=rdt/BL;else{if(Math.abs(sp-MB)>.75){MB=sp;lastBi=Math.floor(MB+1e-6);resync(false);}else MB=sp;}
- const bi=Math.floor(MB+1e-6);if(lastBi===null)lastBi=bi;if(bi!==lastBi){lastBi=bi;beatIdx++;onBeat();if(sp===null||musT-lastOnsetT>2)(bi%2?snareHit:kickHit)();}
- const hb=Math.floor(MB*2+1e-6);if(lastHalf===null)lastHalf=hb;if(hb!==lastHalf){lastHalf=hb;if(hb%2&&(sp===null||musT-lastOnsetT>2))hatHit();}}
+function updMB(rdt){const sp=srcPos();MB+=rdt/BL;if(sp!==null){const er=sp-MB;if(Math.abs(er)>.75){MB=sp;lastBi=Math.floor(MB+1e-6);lastHalf=Math.floor(MB*2+1e-6);resync(false);}else MB+=er*Math.min(1,rdt*6);}
+ const bi=Math.floor(MB+1e-6);if(lastBi===null)lastBi=bi;if(bi>lastBi){lastBi=bi;beatIdx++;onBeat();if(sp===null||musT-lastOnsetT>2)(bi%2?snareHit:kickHit)();}
+ const hb=Math.floor(MB*2+1e-6);if(lastHalf===null)lastHalf=hb;if(hb>lastHalf){lastHalf=hb;if(hb%2&&(sp===null||musT-lastOnsetT>2))hatHit();}}
 const bt=n=>{const q=n<.5?.25:Math.round(n*2)/2,st=Math.floor(beatPos()/q+1e-6),dl=musT+n*BL*2+.15;return ()=>Math.floor(beatPos()/q+1e-6)!==st||musT>dl;};
 function* toBeat(){const st=Math.floor(beatPos()+1e-6),dl=musT+BL*1.5+.1;yield ()=>Math.floor(beatPos()+1e-6)!==st||musT>dl;}
 let isBusy=false;const busy=()=>isBusy;
@@ -712,8 +712,8 @@ const onKick=kickHit,onSnare=snareHit;let hatIdx=-1;
 function clockTick(rdt){uiT+=rdt;if(PLUG&&hostPlay&&musT-hostT<.5)return;if(uiT>3&&au&&!au.paused)ui.classList.add('idle');
  if(liveA()){const t=heard();if(t<lastHeard-.3)seek(t);lastHeard=t;
   an.getByteFrequencyData(fd);let all=0;for(let i=1;i<200;i++)all+=fd[i];level=all/199/255;
-  let c=0;while(ki<grid.kicks.length&&grid.kicks[ki]<=t){ki++;c++;}if(c)onKick();
-  c=0;while(si<grid.snares.length&&grid.snares[si]<=t){si++;c++;}if(c)onSnare();
+  let c=0;while(ki<grid.kicks.length&&grid.kicks[ki]<=t){ki++;c++;}if(c){onKick();lastOnsetT=musT;}
+  c=0;while(si<grid.snares.length&&grid.snares[si]<=t){si++;c++;}if(c){onSnare();lastOnsetT=musT;}
   c=0;while(hi<grid.hats.length&&grid.hats[hi]<=t){hi++;c++;}if(c)hatHit();}
  else{level=au&&!au.paused?.4:0;}}
 
