@@ -29,6 +29,7 @@ juce_add_plugin(bl4de
     IS_MIDI_EFFECT              FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     NEEDS_WEB_BROWSER           TRUE
+    NEEDS_WEBVIEW2              TRUE
     COPY_PLUGIN_AFTER_BUILD     FALSE
     VST3_CATEGORIES             Fx Analyzer
     AU_MAIN_TYPE                kAudioUnitType_Effect)
@@ -41,6 +42,7 @@ target_sources(bl4de PRIVATE
 
 target_compile_definitions(bl4de PUBLIC
     JUCE_WEB_BROWSER=1
+    JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_DISPLAY_SPLASH_SCREEN=0)

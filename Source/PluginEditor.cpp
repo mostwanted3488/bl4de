@@ -20,6 +20,11 @@ Bl4deEditor::Bl4deEditor (Bl4deProcessor& p)
     : AudioProcessorEditor (&p),
       proc (p),
       web (juce::WebBrowserComponent::Options{}
+              #if JUCE_WINDOWS
+               .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
+               .withWinWebView2Options (juce::WebBrowserComponent::Options::WinWebView2{}
+                                            .withUserDataFolder (juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("bl4de")))
+              #endif
                .withNativeIntegrationEnabled()
                .withKeepPageLoadedWhenBrowserIsHidden()
                .withEventListener ("strip", [this] (const juce::var& v)
