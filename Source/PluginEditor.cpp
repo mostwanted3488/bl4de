@@ -75,5 +75,16 @@ void Bl4deEditor::timerCallback()
     o->setProperty ("s",       proc.snares.load());
     o->setProperty ("h",       proc.hats.load());
     o->setProperty ("a",       proc.accents.load());
+    o->setProperty ("lat",     proc.latencySeconds.load());
+    std::vector<Bl4deProcessor::Ev> evs;
+    proc.popEvents (evs);
+    juce::Array<juce::var> arr;
+    for (const auto& ev : evs)
+    {
+        juce::Array<juce::var> row;
+        row.add (ev.ppq); row.add ((double) ev.l); row.add ((double) ev.m); row.add ((double) ev.h); row.add ((double) ev.a);
+        arr.add (juce::var (row));
+    }
+    o->setProperty ("ev", juce::var (arr));
     web.emitEventIfBrowserIsVisible ("host", juce::var (o));
 }

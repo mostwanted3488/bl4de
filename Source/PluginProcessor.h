@@ -1,6 +1,8 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <atomic>
+#include <array>
+#include <vector>
 
 // bl4de — visualiseur : le son passe sans être modifié.
 // Le processeur lit le tempo / la position de l'hôte et détecte kicks, snares et hi-hats.
@@ -39,8 +41,14 @@ public:
     std::atomic<float>  level { 0.0f };
     std::atomic<int>    kicks { 0 }, snares { 0 }, hats { 0 }, accents { 0 };
 
+    // événements horodatés en temps musical (ppq) : courbes par bande + accents
+    struct Ev { double ppq; float l, m, h, a; };
+    int popEvents (std::vector<Ev>& out);
+    std::atomic<double> latencySeconds { 0.1 };
+
 private:
-    void analyseHop();
+    void analyseHop (double hopPpq);
+    void pushEvent (const Ev&);
 
     double sr = 44100.0;
     int hopSize = 512, hopCount = 0;
@@ -51,6 +59,14 @@ private:
     float peakL = 1e-4f, peakM = 1e-4f, peakH = 1e-4f;
     float meanOn = 0, meanH = 0, meanA = 0;
     double sinceOn = 1.0, sinceH = 1.0, sinceA = 1.0;
+    float envPeakL = 1e-3f, envPeakM = 1e-3f, envPeakH = 1e-3f;
+
+    juce::AbstractFifo fifo { 2048 };
+    std::array<Ev, 2048> evBuf {};
+
+    // ligne de retard = latence déclarée (le plugin « voit » le son 100 ms avant qu'on l'entende)
+    std::vector<std::vector<float>> delayLine;
+    int delayLen = 0, delayPos = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Bl4deProcessor)
 };
